@@ -1,6 +1,6 @@
 [package]
 name = "rspotd"
-version = "0.1.3"
+version = "0.1.2"
 edition = "2021"
 description = "Generate ARRIS/CommScope Password of the Day for modems"
 homepage = "https://github.com/MxLinux/rspotd"
