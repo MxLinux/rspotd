@@ -3,6 +3,7 @@ name = "rspotd"
 version = "0.1.0"
 edition = "2021"
 description = "Generate ARRIS/CommScope Password of the Day for modems"
+license = "MIT OR Apache-2.0"
 keywords = ["arris", "commscope", "modem", "docsis", "password", "potd"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
