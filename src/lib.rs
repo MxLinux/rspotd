@@ -18,6 +18,7 @@ impl Iterator for DateRange {
     }
 }
 
+/// Default seed used by ARRIS/CommScope, represents the string "MPSJKMDHAI"
 pub static DEFAULT_SEED: &str = "MPSJKMDHAI";
 static TABLE1: [[i32; 5]; 7] = [
     [15, 15, 24, 20, 24],
