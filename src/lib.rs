@@ -1,5 +1,5 @@
-use chrono::{Datelike, Duration, NaiveDate};
 use chrono::format::strftime::StrftimeItems;
+use chrono::{Datelike, Duration, NaiveDate};
 use regex::Regex;
 use std::collections::HashMap;
 use std::mem;
@@ -27,7 +27,7 @@ static TABLE1: [[i32; 5]; 7] = [
     [23, 32, 24, 29, 29],
     [14, 29, 10, 21, 29],
     [34, 27, 16, 23, 30],
-    [14, 22, 24, 17, 13]
+    [14, 22, 24, 17, 13],
 ];
 static TABLE2: [[i32; 10]; 6] = [
     [0, 1, 2, 9, 3, 4, 5, 6, 7, 8],
@@ -35,15 +35,12 @@ static TABLE2: [[i32; 10]; 6] = [
     [7, 2, 8, 9, 4, 1, 6, 0, 3, 5],
     [6, 3, 5, 9, 1, 8, 2, 7, 4, 0],
     [4, 7, 0, 9, 5, 2, 3, 1, 8, 6],
-    [5, 6, 1, 9, 8, 0, 4, 3, 2, 7]
+    [5, 6, 1, 9, 8, 0, 4, 3, 2, 7],
 ];
 static ALPHANUM: [char; 36] = [
-    '0', '1', '2', '3', '4', '5', '6', '7', '8',
-    '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
-    'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q',
-    'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+    'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
 ];
-
 
 fn first_pass(date: &str) -> Vec<i32> {
     let naive_date = NaiveDate::parse_from_str(date, "%Y-%m-%d").unwrap();
@@ -62,8 +59,7 @@ fn first_pass(date: &str) -> Vec<i32> {
     result.push(day);
     if ((year_trimmed + month) - day) < 0 {
         result.push((((year_trimmed + month) - day) + 36) % 36);
-    }
-    else {
+    } else {
         result.push(((year_trimmed + month) - day) % 36)
     }
     result.push((((3 + ((year_trimmed + month) % 12)) * day) % 37) % 36);
@@ -92,8 +88,7 @@ fn third_pass(first_result: Vec<i32>, second_result: Vec<i32>) -> Vec<i32> {
     let _last_value = (result[8] % 6).pow(2) as f64;
     if (_last_value - _last_value.floor()) < 0.5 {
         result.push(_last_value.floor() as i32)
-    }
-    else {
+    } else {
         result.push(_last_value.ceil() as i32);
     }
     return result;
@@ -155,27 +150,29 @@ fn validate_range(date_begin: &str, date_end: &str) {
         panic!("Invalid date range. Beginning date must occur before end date, and the values cannot be the same.");
     }
     if naive_end - naive_begin > Duration::days(365) {
-        panic!("Invalid date range. Official tooling does not allow a date range exceeding 1 year.");
+        panic!(
+            "Invalid date range. Official tooling does not allow a date range exceeding 1 year."
+        );
     }
 }
 
 /// Generate an ARRIS/Commscope modem password given a date and seed
-/// 
+///
 /// # Examples
-/// 
+///
 /// ## Using default seed
-/// 
-/// ```
-/// use rspotd::{DEFAULT_SEED, generate}
-/// 
+///
+/// ```no_run
+/// use rspotd::{DEFAULT_SEED, generate};
+///
 /// generate("2021-12-25", DEFAULT_SEED);
 /// ```
-/// 
+///
 /// ## Using custom seed
-/// 
-/// ```
+///
+/// ```no_run
 /// use rspotd::generate;
-/// 
+///
 /// generate("2021-12-25", "ABCDEFGH");
 /// ```
 pub fn generate(date: &str, seed: &str) -> String {
@@ -194,22 +191,22 @@ pub fn generate(date: &str, seed: &str) -> String {
 }
 
 /// Generate a series of ARRIS/Commscope modem passwords given a start and end date and a seed
-/// 
+///
 /// # Examples
-/// 
+///
 /// ## Using default seed
-/// 
-/// ```
-/// use rspotd::{DEFAULT_SEED, generate_multiple}
-/// 
+///
+/// ```no_run
+/// use rspotd::{DEFAULT_SEED, generate_multiple};
+///
 /// generate_multiple("2021-07-23", "2022-07-28", DEFAULT_SEED);
 /// ```
-/// 
+///
 /// ## Using custom seed
-/// 
-/// ```
+///
+/// ```no_run
 /// use rspotd::generate_multiple;
-/// 
+///
 /// generate_multiple("2021-07-23", "2022-07-28", "ABCDABCD");
 /// ```
 pub fn generate_multiple(date_begin: &str, date_end: &str, seed: &str) -> HashMap<String, String> {
@@ -233,64 +230,10 @@ pub fn generate_multiple(date_begin: &str, date_end: &str, seed: &str) -> HashMa
             potd_char_vec.push(ALPHANUM[fifth_result[i as usize] as usize]);
         }
         let potd: String = potd_char_vec.into_iter().collect();
-        potd_map.insert(
-            date_string,
-            potd,
-        );
+        potd_map.insert(date_string, potd);
     }
     return potd_map;
 }
 
 #[cfg(test)]
-mod tests {
-    use std::collections::HashMap;
-
-    #[test]
-    fn default_seed() {
-        assert_eq!(super::generate("2021-12-25", super::DEFAULT_SEED), "ZCARK8TPK5");
-    }
-    #[test]
-    fn custom_seed() {
-        assert_eq!(super::generate("2021-12-25", "1122AABB"), "FEWNX8OS0O");
-    }
-    #[test]
-    fn different_date() {
-        assert_eq!(super::generate("1960-10-22", super::DEFAULT_SEED), "WGAR88TPKS");
-    }
-    #[test]
-    fn small_multiple() {
-        let mut comparison_map: HashMap<String, String> = HashMap::new();
-        let date_begin: String = "2021-12-25".to_string();
-        let date_end: String = "2021-12-26".to_string();
-        let seed_begin: String = "ZCARK8TPK5".to_string();
-        let seed_end: String = "ZOU3MLLZO4".to_string();
-        comparison_map.insert(date_begin, seed_begin);
-        comparison_map.insert(date_end, seed_end);
-        assert_eq!(super::generate_multiple("2021-12-25", "2021-12-26", super::DEFAULT_SEED), comparison_map);
-    }
-    #[test]
-    #[should_panic]
-    fn small_multiple_invalid_range() {
-        println!("{:?}", super::generate_multiple("2021-12-26", "2021-12-25", super::DEFAULT_SEED));
-    }
-    #[test]
-    #[should_panic]
-    fn multiple_exceed_year() {
-        println!("{:?}", super::generate_multiple("2021-12-25", "2022-12-26", super::DEFAULT_SEED));
-    }
-    #[test]
-    #[should_panic]
-    fn small_seed() {
-        super::generate("1960-10-22", "ABC");
-    }
-    #[test]
-    #[should_panic]
-    fn large_seed() {
-        super::generate("1960-10-22", "ABCABCABC");
-    }
-    #[test]
-    #[should_panic]
-    fn invalid_date() {
-        super::generate("Phoenix dactylifera", super::DEFAULT_SEED);
-    }
-}
+mod tests;
