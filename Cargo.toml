@@ -12,13 +12,3 @@ keywords = ["arris", "commscope", "modem", "docsis", "potd"]
 [dependencies]
 chrono = "0.4"
 regex = "1"
-wasm-bindgen = { version = "0.2.78", optional = true }
-
-[features]
-wasm = ["wasm-bindgen"]
-
-[profile.dev]
-opt-level = 0
-
-[profile.release]
-opt-level = 3
