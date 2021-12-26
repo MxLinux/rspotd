@@ -18,7 +18,7 @@ impl Iterator for DateRange {
     }
 }
 
-static DEFAULT_SEED: &str = "MPSJKMDHAI";
+pub static DEFAULT_SEED: &str = "MPSJKMDHAI";
 static TABLE1: [[i32; 5]; 7] = [
     [15, 15, 24, 20, 24],
     [13, 14, 27, 32, 10],
@@ -158,6 +158,25 @@ fn validate_range(date_begin: &str, date_end: &str) {
     }
 }
 
+/// Generate an ARRIS/Commscope modem password given a date and seed
+/// 
+/// # Examples
+/// 
+/// ## Using default seed
+/// 
+/// ```
+/// use rspotd::{DEFAULT_SEED, generate}
+/// 
+/// generate("2021-12-25", DEFAULT_SEED);
+/// ```
+/// 
+/// ## Using custom seed
+/// 
+/// ```
+/// use rspotd::generate;
+/// 
+/// generate("2021-12-25", "ABCDEFGH");
+/// ```
 pub fn generate(date: &str, seed: &str) -> String {
     validate_date(date);
     let mut owned_seed = seed.to_owned();
@@ -173,6 +192,25 @@ pub fn generate(date: &str, seed: &str) -> String {
     return potd;
 }
 
+/// Generate a series of ARRIS/Commscope modem passwords given a start and end date and a seed
+/// 
+/// # Examples
+/// 
+/// ## Using default seed
+/// 
+/// ```
+/// use rspotd::{DEFAULT_SEED, generate_multiple}
+/// 
+/// generate_multiple("2021-07-23", "2022-07-28", DEFAULT_SEED);
+/// ```
+/// 
+/// ## Using custom seed
+/// 
+/// ```
+/// use rspotd::generate_multiple;
+/// 
+/// generate_multiple("2021-07-23", "2022-07-28", "ABCDABCD");
+/// ```
 pub fn generate_multiple(date_begin: &str, date_end: &str, seed: &str) -> HashMap<String, String> {
     validate_date(date_begin);
     validate_date(date_end);

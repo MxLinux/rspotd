@@ -17,20 +17,20 @@ Fourth, as much as I would love to contribute upstream fixes rather than a fork/
 The `generate()` function accepts two keyword arguments.
 * `date`: Accepts a single date in ISO format (i.e., 2021-07-23)
 * `seed`: Accepts a seed between 4 and 8 characters
-### Using defaults (current date, ARRIS default seed)
+### Using ARRIS default seed
 ```rust
-use rspotd::generate;
+use rspotd::{DEFAULT_SEED, generate};
 
-generate("2021-12-25", "ABCDEFGH");
+generate("2021-12-25", DEFAULT_SEED);
 ```
 
 Output (Assuming date is 2021-07-23): `O9W2Q1O16V`
 
-### Using custom date, custom seed
+### Using custom seed
 ```rust
 use rspotd::generate;
 
-generate("2021-07-23", "ABCDABCD")
+generate("2021-07-23", "ABCDABCD");
 ```
 
 Output: `F32CAZCJLU`
@@ -40,9 +40,9 @@ The `generate_multiple()` function takes a start and end date, as well as an opt
 
 ### Using default seed
 ```rust
-use rspotd::generate_multiple;
+use rspotd::{DEFAULT_SEED, generate_multiple};
 
-generate_multiple("2021-07-23", "2022-07-28", "MPSJKMDHAI")
+generate_multiple("2021-07-23", "2022-07-28", DEFAULT_SEED);
 ```
 
 Output (truncated):
@@ -59,7 +59,7 @@ Output (truncated):
 ```rust
 use rspotd::generate_multiple;
 
-generate_multiple("2021-07-23", "2022-07-28", "ABCDABCD")
+generate_multiple("2021-07-23", "2022-07-28", "ABCDABCD");
 ```
 
 Output (truncated):

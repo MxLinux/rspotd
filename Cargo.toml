@@ -12,3 +12,9 @@ keywords = ["arris", "commscope", "modem", "docsis", "potd"]
 [dependencies]
 chrono = "0.4"
 regex = "1"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
