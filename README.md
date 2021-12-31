@@ -98,7 +98,7 @@ In the official tooling, the DES value is not provided if you select the "Use de
 
 Only one such value will exist for any number of passwords of a given seed; the modem infers the seed from this value.
 
-```no_run
+```rust
 use rspotd::seed_to_des;
 
 seed_to_des("ASDF");
