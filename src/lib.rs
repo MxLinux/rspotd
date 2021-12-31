@@ -264,8 +264,8 @@ pub fn seed_to_des(seed: &str) -> String {
     if seed == DEFAULT_SEED {
         default_des
     } else {
-        let key = [0x14, 0x9D, 0x40, 0xD5, 0xC1, 0x2E, 0x55, 0x2];
-        let iv = [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0];
+        let key = [20, 157, 64, 213, 193, 46, 85, 2];
+        let iv = [0, 0, 0, 0, 0, 0, 0, 0];
         type DesCbc = Cbc<Des, ZeroPadding>;
         let cipher = DesCbc::new_from_slices(&key, &iv).unwrap();
         let mut seed_buffer = [0u8; 8];
