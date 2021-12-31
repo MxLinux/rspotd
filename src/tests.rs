@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 #[test]
 fn default_seed() {
     assert_eq!(
@@ -20,6 +18,7 @@ fn different_date() {
 }
 #[test]
 fn small_multiple() {
+    use std::collections::HashMap;
     let mut comparison_map: HashMap<String, String> = HashMap::new();
     let date_begin: String = "2021-12-25".to_string();
     let date_end: String = "2021-12-26".to_string();
@@ -31,6 +30,10 @@ fn small_multiple() {
         super::generate_multiple("2021-12-25", "2021-12-26", super::DEFAULT_SEED),
         comparison_map
     );
+}
+#[test]
+fn des_test() {
+    assert_eq!("3F.94.E2.AA.46.63.AA.78", super::seed_to_des("ABCD"));
 }
 #[test]
 #[should_panic]
@@ -62,4 +65,9 @@ fn large_seed() {
 #[should_panic]
 fn invalid_date() {
     super::generate("Phoenix dactylifera", super::DEFAULT_SEED);
+}
+#[test]
+#[should_panic]
+fn des_seed_short() {
+    super::seed_to_des("ABC");
 }

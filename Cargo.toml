@@ -1,6 +1,6 @@
 [package]
 name = "rspotd"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "Generate ARRIS/CommScope Password of the Day for modems"
 homepage = "https://github.com/MxLinux/rspotd"
@@ -10,5 +10,8 @@ keywords = ["arris", "commscope", "modem", "docsis", "potd"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+block-modes = "0.8.1"
+block-padding = "0.2.1"
 chrono = "0.4"
+des = "0.7.0"
 regex = "1"
