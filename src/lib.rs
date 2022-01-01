@@ -58,17 +58,20 @@ fn first_pass(date: &str) -> Vec<i32> {
     let month = date_components[1];
     let day = date_components[2];
     let day_of_week = naive_date.weekday().num_days_from_monday() as usize;
-    let mut result = Vec::new();
-    for i in 0..5 {
-        result.push(TABLE1[day_of_week][i])
-    }
-    result.push(day);
-    if ((year_trimmed + month) - day) < 0 {
-        result.push((((year_trimmed + month) - day) + 36) % 36);
-    } else {
-        result.push(((year_trimmed + month) - day) % 36)
-    }
-    result.push((((3 + ((year_trimmed + month) % 12)) * day) % 37) % 36);
+    let result: Vec<i32> = (0..8)
+        .map(|i| match i {
+            0..=4 => TABLE1[day_of_week][i],
+            5 => day,
+            6 => {
+                if ((year_trimmed + month) - day) < 0 {
+                    (((year_trimmed + month) - day) + 36) % 36
+                } else {
+                    ((year_trimmed + month) - day) % 36
+                }
+            }
+            _ => (((3 + ((year_trimmed + month) % 12)) * day) % 37) % 36,
+        })
+        .collect();
     return result;
 }
 
