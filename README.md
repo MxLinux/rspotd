@@ -25,12 +25,12 @@ The `generate()` function accepts two keyword arguments.
 ### Using ARRIS default seed
 
 ```rust
-use rspotd::{DEFAULT_SEED, generate};
+use rspotd::{generate, vals::DEFAULT_SEE};
 
-generate("2021-12-25", DEFAULT_SEED);
+generate("2021-07-23", DEFAULT_SEED);
 ```
 
-Output (Assuming date is 2021-07-23): `O9W2Q1O16V`
+Output: `O9W2Q1O16V`
 
 ### Using custom seed
 
@@ -49,7 +49,7 @@ The `generate_multiple()` function takes a start and end date, as well as an opt
 ### Using default seed
 
 ```rust
-use rspotd::{DEFAULT_SEED, generate_multiple};
+use rspotd::{generate_multiple, vals::DEFAULT_SEE};
 
 generate_multiple("2021-07-23", "2022-07-28", DEFAULT_SEED);
 ```
