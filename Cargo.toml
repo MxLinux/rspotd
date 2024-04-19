@@ -3,11 +3,9 @@ name = "rspotd"
 version = "0.1.7"
 edition = "2021"
 description = "Generate ARRIS/CommScope Password of the Day for modems"
-homepage = "https://github.com/MxLinux/rspotd"
+homepage = "https://github.com/SnailShea/rspotd"
 license = "MIT OR Apache-2.0"
-keywords = ["arris", "commscope", "modem", "docsis", "potd"]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+keywords = ["arris", "commscope", "modem", "docsis", "potd", "mta", "emta"]
 
 [dependencies]
 block-modes = "0.8.1"
