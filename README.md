@@ -27,7 +27,7 @@ The `generate()` function accepts two keyword arguments.
 ```rust
 use rspotd::{generate, vals::DEFAULT_SEE};
 
-generate("2021-07-23", DEFAULT_SEED);
+generate("2021-07-23", DEFAULT_SEED).unwrap();
 ```
 
 Output: `O9W2Q1O16V`
@@ -37,7 +37,7 @@ Output: `O9W2Q1O16V`
 ```rust
 use rspotd::generate;
 
-generate("2021-07-23", "ABCDABCD");
+generate("2021-07-23", "ABCDABCD").unwrap();
 ```
 
 Output: `F32CAZCJLU`
@@ -51,7 +51,7 @@ The `generate_multiple()` function takes a start and end date, as well as an opt
 ```rust
 use rspotd::{generate_multiple, vals::DEFAULT_SEE};
 
-generate_multiple("2021-07-23", "2022-07-28", DEFAULT_SEED);
+generate_multiple("2021-07-23", "2022-07-28", DEFAULT_SEED).unwrap();
 ```
 
 Output (truncated):
@@ -70,7 +70,7 @@ Output (truncated):
 ```rust
 use rspotd::generate_multiple;
 
-generate_multiple("2021-07-23", "2022-07-28", "ABCDABCD");
+generate_multiple("2021-07-23", "2022-07-28", "ABCDABCD").unwrap();
 ```
 
 Output (truncated):
@@ -101,7 +101,7 @@ Only one such value will exist for any number of passwords of a given seed; the 
 ```rust
 use rspotd::seed_to_des;
 
-seed_to_des("ASDF");
+seed_to_des("ASDF").unwrap();
 ```
 
 Output:
