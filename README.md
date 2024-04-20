@@ -25,7 +25,7 @@ The `generate()` function accepts two keyword arguments.
 ### Using ARRIS default seed
 
 ```rust
-use rspotd::{generate, vals::DEFAULT_SEE};
+use rspotd::{generate, vals::DEFAULT_SEED};
 
 generate("2021-07-23", DEFAULT_SEED).unwrap();
 ```
@@ -49,7 +49,7 @@ The `generate_multiple()` function takes a start and end date, as well as an opt
 ### Using default seed
 
 ```rust
-use rspotd::{generate_multiple, vals::DEFAULT_SEE};
+use rspotd::{generate_multiple, vals::DEFAULT_SEED};
 
 generate_multiple("2021-07-23", "2022-07-28", DEFAULT_SEED).unwrap();
 ```
