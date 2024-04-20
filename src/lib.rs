@@ -1,11 +1,12 @@
 use block_modes::{BlockMode, Cbc};
-use block_padding::{Padding, ZeroPadding};
+use block_padding::ZeroPadding;
 use chrono::format::strftime::StrftimeItems;
 use chrono::{Datelike, Duration, NaiveDate};
 use des::Des;
 use regex::Regex;
 use std::collections::HashMap;
-use std::mem;
+use std::error::Error;
+use std::mem::replace;
 
 // Create a date range using a start and end date
 struct DateRange(NaiveDate, NaiveDate);
@@ -14,7 +15,7 @@ impl Iterator for DateRange {
     fn next(&mut self) -> Option<Self::Item> {
         if self.0 <= self.1 {
             let next = self.0 + Duration::days(1);
-            Some(mem::replace(&mut self.0, next))
+            Some(replace(&mut self.0, next))
         } else {
             None
         }
@@ -64,11 +65,11 @@ fn third_pass(first_result: Vec<i32>, second_result: Vec<i32>) -> Vec<i32> {
     let sum_of_parts: i32 = first_eight.iter().sum();
     let mut result: Vec<i32> = Vec::from(first_eight);
     result.push(sum_of_parts % 36);
-    let _last_value = (result[8] % 6).pow(2) as f64;
-    if (_last_value - _last_value.floor()) < 0.5 {
-        result.push(_last_value.floor() as i32)
+    let last_value = (result[8] % 6).pow(2) as f64;
+    if (last_value - last_value.floor()) < 0.5 {
+        result.push(last_value.floor() as i32)
     } else {
-        result.push(_last_value.ceil() as i32);
+        result.push(last_value.ceil() as i32);
     }
     return result;
 }
@@ -81,16 +82,21 @@ fn fourth_pass(third_result: Vec<i32>) -> Vec<i32> {
     return result;
 }
 
-fn fifth_pass(padded_seed: &str, fourth_result: Vec<i32>) -> Vec<i32> {
-    let result: Vec<i32> = padded_seed
+fn fifth_pass(padded_seed: &str, fourth_result: Vec<i32>) -> String {
+    use vals::ALPHANUM;
+    let vec_a: Vec<i32> = padded_seed
         .chars()
         .enumerate()
         .map(|(i, c)| (c as i32 + fourth_result[i]) % 36)
         .collect();
-    return result;
+    let mut vec_b: Vec<char> = Vec::new();
+    for i in 0..10 {
+        vec_b.push(ALPHANUM[vec_a[i as usize] as usize]);
+    }
+    return vec_b.into_iter().collect();
 }
 
-fn derive_from_input(date: &str, padded_seed: &str) -> Vec<i32> {
+fn derive_from_input(date: &str, padded_seed: &str) -> String {
     let first_result = first_pass(date);
     let second_result = second_pass(padded_seed);
     let third_result = third_pass(first_result, second_result);
@@ -99,34 +105,38 @@ fn derive_from_input(date: &str, padded_seed: &str) -> Vec<i32> {
     return fifth_result;
 }
 
-fn validate_seed(seed: &str) -> String {
+fn validate_seed(seed: &str) -> Result<String, Box<dyn Error>> {
+    use vals::DEFAULT_SEED;
+    if seed == DEFAULT_SEED {
+        return Ok(seed.to_string())
+    }
     // seed must be 4-8 characters
     if seed.len() < 4 || seed.len() > 8 {
-        panic!("Seed should be >= 4 and <= 8 characters long.")
+        Err("Seed should be >= 4 and <= 8 characters long.")?;
     }
     let mut padded_seed = seed.to_string();
     padded_seed.push_str(&seed[0..10 - &seed.len()]);
-    return padded_seed;
+    return Ok(padded_seed);
 }
 
-fn validate_date(date: &str) {
-    let date_regex: regex::Regex = Regex::new(r"^\d{4}-\d{2}-\d{2}$").unwrap();
+fn validate_date(date: &str) -> Result<bool, Box<dyn Error>> {
+    let date_regex: Regex = Regex::new(r"^\d{4}-\d{2}-\d{2}$").unwrap();
     if !date_regex.is_match(date) {
-        panic!("Invalid date format, must be YYYY-MM-DD")
+        Err("Invalid date format, must be YYYY-MM-DD")?;
     }
+    Ok(true)
 }
 
-fn validate_range(date_begin: &str, date_end: &str) {
+fn validate_range(date_begin: &str, date_end: &str) -> Result<bool, Box<dyn Error>> {
     let naive_begin = NaiveDate::parse_from_str(date_begin, "%Y-%m-%d").unwrap();
     let naive_end = NaiveDate::parse_from_str(date_end, "%Y-%m-%d").unwrap();
     if naive_end.signed_duration_since(naive_begin) <= Duration::zero() {
-        panic!("Invalid date range. Beginning date must occur before end date, and the values cannot be the same.");
+        Err("Invalid date range. Beginning date must occur before end date, and the values cannot be the same.")?;
     }
     if naive_end - naive_begin > Duration::days(365) {
-        panic!(
-            "Invalid date range. Official tooling does not allow a date range exceeding 1 year."
-        );
+        Err("Invalid date range. Official tooling does not allow a date range exceeding 1 year.")?;
     }
+    return Ok(true)
 }
 
 /// Generate an ARRIS/Commscope modem password given a date and seed
@@ -138,7 +148,7 @@ fn validate_range(date_begin: &str, date_end: &str) {
 /// ```no_run
 /// use rspotd::{generate, vals::DEFAULT_SEED};
 ///
-/// generate("2021-12-25", DEFAULT_SEED);
+/// generate("2021-12-25", DEFAULT_SEED).unwrap();
 /// ```
 ///
 /// ## Using custom seed
@@ -146,22 +156,20 @@ fn validate_range(date_begin: &str, date_end: &str) {
 /// ```no_run
 /// use rspotd::generate;
 ///
-/// generate("2021-12-25", "ABCDEFGH");
+/// generate("2021-12-25", "ABCDEFGH").unwrap();
 /// ```
-pub fn generate(date: &str, seed: &str) -> String {
-    use vals::{ALPHANUM, DEFAULT_SEED};
-    validate_date(date);
-    let mut owned_seed = seed.to_owned();
-    if seed != DEFAULT_SEED {
-        owned_seed = validate_seed(seed);
+pub fn generate(date: &str, seed: &str) -> Result<String, Box<dyn Error>> {
+    let valid_date = validate_date(date);
+    if valid_date.is_err() {
+        Err(valid_date.unwrap_err())?;
     }
-    let fifth_result = derive_from_input(date, &owned_seed);
-    let mut potd_char_vec: Vec<char> = Vec::new();
-    for i in 0..10 {
-        potd_char_vec.push(ALPHANUM[fifth_result[i as usize] as usize]);
+    let valid_seed = validate_seed(seed);
+    if valid_seed.is_err() {
+        let err_str = &valid_seed.as_ref();
+        Err(err_str.unwrap_err().to_string())?;
     }
-    let potd: String = potd_char_vec.into_iter().collect();
-    return potd;
+
+    return Ok(derive_from_input(date, &valid_seed.unwrap()));
 }
 
 /// Generate a series of ARRIS/Commscope modem passwords given a start and end date and a seed
@@ -173,7 +181,7 @@ pub fn generate(date: &str, seed: &str) -> String {
 /// ```no_run
 /// use rspotd::{generate_multiple, vals::DEFAULT_SEED};
 ///
-/// generate_multiple("2021-07-23", "2022-07-28", DEFAULT_SEED);
+/// generate_multiple("2021-07-23", "2022-07-28", DEFAULT_SEED).unwrap();
 /// ```
 ///
 /// ## Using custom seed
@@ -181,33 +189,40 @@ pub fn generate(date: &str, seed: &str) -> String {
 /// ```no_run
 /// use rspotd::generate_multiple;
 ///
-/// generate_multiple("2021-07-23", "2022-07-28", "ABCDABCD");
+/// generate_multiple("2021-07-23", "2022-07-28", "ABCDABCD").unwrap();
 /// ```
-pub fn generate_multiple(date_begin: &str, date_end: &str, seed: &str) -> HashMap<String, String> {
-    use vals::{ALPHANUM, DEFAULT_SEED};
-    validate_date(date_begin);
-    validate_date(date_end);
-    validate_range(date_begin, date_end);
+pub fn generate_multiple(
+    date_begin: &str,
+    date_end: &str,
+    seed: &str,
+) -> Result<HashMap<String, String>, Box<dyn Error>> {
+    let valid_begin = validate_date(date_begin);
+    let valid_end = validate_date(date_end);
+    if valid_begin.is_err() {
+        Err(valid_begin.unwrap_err())?;
+    }
+    if valid_end.is_err() {
+        Err(valid_end.unwrap_err())?;
+    }
+    let valid_range = validate_range(date_begin, date_end);
+    if valid_range.is_err() {
+        Err(valid_range.unwrap_err())?;
+    }
     let naive_begin = NaiveDate::parse_from_str(date_begin, "%Y-%m-%d").unwrap();
     let naive_end = NaiveDate::parse_from_str(date_end, "%Y-%m-%d").unwrap();
     let date_range = DateRange(naive_begin, naive_end);
-    let mut owned_seed = seed.to_owned();
-    if seed != DEFAULT_SEED {
-        owned_seed = validate_seed(seed);
+    let valid_seed = validate_seed(seed);
+    if valid_seed.is_err() {
+        let err_str = &valid_seed.as_ref();
+        Err(err_str.unwrap_err().to_string())?;
     }
     let mut potd_map = HashMap::new();
     for date in date_range {
         let format = StrftimeItems::new("%Y-%m-%d");
         let date_string = date.format_with_items(format).to_string();
-        let fifth_result = derive_from_input(&date_string, &owned_seed);
-        let mut potd_char_vec: Vec<char> = Vec::new();
-        for i in 0..10 {
-            potd_char_vec.push(ALPHANUM[fifth_result[i as usize] as usize]);
-        }
-        let potd: String = potd_char_vec.into_iter().collect();
-        potd_map.insert(date_string, potd);
+        potd_map.insert(date_string.to_string(), derive_from_input(&date_string, &valid_seed.as_ref().unwrap()));
     }
-    return potd_map;
+    return Ok(potd_map);
 }
 
 /// Creates the required dot-delimited hex string correlating to the provided seed DES-encrypted.
@@ -232,27 +247,24 @@ pub fn generate_multiple(date_begin: &str, date_end: &str, seed: &str) -> HashMa
 /// ```no_run
 /// use rspotd::seed_to_des;
 ///
-/// seed_to_des("ASDF");
+/// seed_to_des("ASDF").unwrap();
 /// ```
-pub fn seed_to_des(seed: &str) -> String {
+pub fn seed_to_des(seed: &str) -> Result<String, Box<dyn Error>> {
     use vals::DEFAULT_SEED;
     if seed.len() < 4 || seed.len() > 8 {
-        panic!("Seed should be >= 4 and <= 8 characters long.");
+        Err("Seed should be >= 4 and <= 8 characters long.")?;
     }
     let default_des: String = "DB.B5.CB.D6.11.17.D6.EB".to_string();
     if seed == DEFAULT_SEED {
-        default_des
+        Ok(default_des)
     } else {
         let key = [20, 157, 64, 213, 193, 46, 85, 2];
         let iv = [0, 0, 0, 0, 0, 0, 0, 0];
         type DesCbc = Cbc<Des, ZeroPadding>;
         let cipher = DesCbc::new_from_slices(&key, &iv).unwrap();
         let mut seed_buffer = [0u8; 8];
-        let seed_as_bytes = seed.as_bytes();
-        let seed_len = seed.len();
-        seed_buffer[..seed_len].copy_from_slice(seed_as_bytes);
-        let padded_seed = ZeroPadding::pad(&mut seed_buffer, seed_len, 8).unwrap();
-        let encrypted_seed = cipher.encrypt(padded_seed, seed_len).unwrap();
+        seed_buffer[..seed.len()].copy_from_slice(seed.as_bytes());
+        let encrypted_seed = cipher.encrypt(&mut seed_buffer, seed.len()).unwrap();
         let seed_string: String = encrypted_seed
             .iter()
             .map(|i| {
@@ -263,7 +275,7 @@ pub fn seed_to_des(seed: &str) -> String {
                 }
             })
             .collect();
-        seed_string
+        Ok(seed_string)
     }
 }
 
