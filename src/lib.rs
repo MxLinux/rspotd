@@ -22,8 +22,8 @@ impl Iterator for DateRange {
     }
 }
 
-fn first_pass(date: &str) -> Vec<i32> {
-    use vals::TABLE1;
+fn derive_from_input(date: &str, padded_seed: &str) -> String {
+    use vals::{ALPHANUM, TABLE1, TABLE2};
     let naive_date = NaiveDate::parse_from_str(date, "%Y-%m-%d").unwrap();
     // Split date in YYYY-MM-DD format by hypen into a Vector of strings
     let date_components: Vec<i32> = date
@@ -36,7 +36,7 @@ fn first_pass(date: &str) -> Vec<i32> {
     let month = date_components[1];
     let day = date_components[2];
     let day_of_week = naive_date.weekday().num_days_from_monday() as usize;
-    let result: Vec<i32> = (0..8)
+    let a: Vec<i32> = (0..8)
         .map(|i| match i {
             0..=4 => TABLE1[day_of_week][i],
             5 => day,
@@ -50,72 +50,41 @@ fn first_pass(date: &str) -> Vec<i32> {
             _ => (((3 + ((year_trimmed + month) % 12)) * day) % 37) % 36,
         })
         .collect();
-    return result;
-}
-
-fn second_pass(padded_seed: &str) -> Vec<i32> {
-    let result: Vec<i32> = padded_seed.chars().map(|c| c as i32).collect();
-    return result;
-}
-
-fn third_pass(first_result: Vec<i32>, second_result: Vec<i32>) -> Vec<i32> {
-    let first_eight: Vec<i32> = (0..8)
-        .map(|i| (first_result[i] + second_result[i]) % 36)
-        .collect();
+    let b: Vec<i32> = padded_seed.chars().map(|c| c as i32).collect();
+    let first_eight: Vec<i32> = (0..8).map(|i| (a[i] + b[i]) % 36).collect();
     let sum_of_parts: i32 = first_eight.iter().sum();
-    let mut result: Vec<i32> = Vec::from(first_eight);
-    result.push(sum_of_parts % 36);
-    let last_value = (result[8] % 6).pow(2) as f64;
+    let mut c: Vec<i32> = Vec::from(first_eight);
+    c.push(sum_of_parts % 36);
+    let last_value = (c[8] % 6).pow(2) as f64;
     if (last_value - last_value.floor()) < 0.5 {
-        result.push(last_value.floor() as i32)
+        c.push(last_value.floor() as i32)
     } else {
-        result.push(last_value.ceil() as i32);
+        c.push(last_value.ceil() as i32);
     }
-    return result;
-}
-
-fn fourth_pass(third_result: Vec<i32>) -> Vec<i32> {
-    use vals::TABLE2;
-    let result: Vec<i32> = (0..10)
-        .map(|i| third_result[TABLE2[(third_result[8] % 6) as usize][i] as usize])
+    let d: Vec<i32> = (0..10)
+        .map(|i| c[TABLE2[(c[8] % 6) as usize][i] as usize])
         .collect();
-    return result;
-}
-
-fn fifth_pass(padded_seed: &str, fourth_result: Vec<i32>) -> String {
-    use vals::ALPHANUM;
     let vec_a: Vec<i32> = padded_seed
         .chars()
         .enumerate()
-        .map(|(i, c)| (c as i32 + fourth_result[i]) % 36)
+        .map(|(i, c)| (c as i32 + d[i]) % 36)
         .collect();
-    let mut vec_b: Vec<char> = Vec::new();
-    for i in 0..10 {
-        vec_b.push(ALPHANUM[vec_a[i as usize] as usize]);
-    }
-    return vec_b.into_iter().collect();
-}
-
-fn derive_from_input(date: &str, padded_seed: &str) -> String {
-    let first_result = first_pass(date);
-    let second_result = second_pass(padded_seed);
-    let third_result = third_pass(first_result, second_result);
-    let fourth_result = fourth_pass(third_result);
-    let fifth_result = fifth_pass(padded_seed, fourth_result);
-    return fifth_result;
+    let vec_b: String = (0..10)
+        .map(|i: i32| ALPHANUM[vec_a[i as usize] as usize])
+        .collect();
+    return vec_b;
 }
 
 fn validate_seed(seed: &str) -> Result<String, Box<dyn Error>> {
     use vals::DEFAULT_SEED;
     if seed == DEFAULT_SEED {
-        return Ok(seed.to_string())
+        return Ok(seed.to_string());
     }
     // seed must be 4-8 characters
     if seed.len() < 4 || seed.len() > 8 {
         Err("Seed should be >= 4 and <= 8 characters long.")?;
     }
-    let mut padded_seed = seed.to_string();
-    padded_seed.push_str(&seed[0..10 - &seed.len()]);
+    let padded_seed: String = format!("{}{}", seed.to_string(), (&seed[0..10 - &seed.len()]));
     return Ok(padded_seed);
 }
 
@@ -136,7 +105,7 @@ fn validate_range(date_begin: &str, date_end: &str) -> Result<bool, Box<dyn Erro
     if naive_end - naive_begin > Duration::days(365) {
         Err("Invalid date range. Official tooling does not allow a date range exceeding 1 year.")?;
     }
-    return Ok(true)
+    return Ok(true);
 }
 
 /// Generate an ARRIS/Commscope modem password given a date and seed
@@ -220,7 +189,10 @@ pub fn generate_multiple(
     for date in date_range {
         let format = StrftimeItems::new("%Y-%m-%d");
         let date_string = date.format_with_items(format).to_string();
-        potd_map.insert(date_string.to_string(), derive_from_input(&date_string, &valid_seed.as_ref().unwrap()));
+        potd_map.insert(
+            date_string.to_string(),
+            derive_from_input(&date_string, &valid_seed.as_ref().unwrap()),
+        );
     }
     return Ok(potd_map);
 }
