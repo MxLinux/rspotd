@@ -65,3 +65,8 @@ fn invalid_date() {
 fn des_seed_short() {
     assert!(seed_to_des("ABC").is_err());
 }
+
+#[test]
+fn date_parse_failure() {
+    assert!(generate("1999-10-40", DEFAULT_SEED).is_err());
+}
