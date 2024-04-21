@@ -11,6 +11,11 @@ fn custom_seed() {
 }
 
 #[test]
+fn new_iter() {
+    assert_eq!(generate("2024-04-21", "ASDF").unwrap(), "08GY8HS1RH");
+}
+
+#[test]
 fn different_date() {
     assert_eq!(generate("1960-10-22", DEFAULT_SEED).unwrap(), "WGAR88TPKS");
 }

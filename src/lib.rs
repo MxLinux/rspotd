@@ -75,6 +75,18 @@ fn derive_from_input(date: &str, padded_seed: &str) -> String {
     return vec_b;
 }
 
+fn pad_seed(seed: &str) -> String {
+    let mut padded = seed.to_string();
+    if seed.len() == 4 {
+        let diff = format!("{}{}", &seed, &seed[0..2]);
+        padded.push_str(&diff);
+        return padded
+    }
+    let diff: String = (0..10 - seed.len()).into_iter().map(|i| seed.as_bytes()[i as usize] as char).into_iter().collect();
+    padded.push_str(&diff);
+    padded
+}
+
 fn validate_seed(seed: &str) -> Result<String, Box<dyn Error>> {
     use vals::DEFAULT_SEED;
     if seed == DEFAULT_SEED {
@@ -84,7 +96,7 @@ fn validate_seed(seed: &str) -> Result<String, Box<dyn Error>> {
     if seed.len() < 4 || seed.len() > 8 {
         Err("Seed should be >= 4 and <= 8 characters long.")?;
     }
-    let padded_seed: String = format!("{}{}", seed.to_string(), (&seed[0..10 - &seed.len()]));
+    let padded_seed: String = pad_seed(seed);
     return Ok(padded_seed);
 }
 
