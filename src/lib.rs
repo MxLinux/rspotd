@@ -1,7 +1,7 @@
 use block_modes::{BlockMode, Cbc};
 use block_padding::ZeroPadding;
 use chrono::format::strftime::StrftimeItems;
-use chrono::{Datelike, Duration, NaiveDate};
+use chrono::{Datelike, Duration, NaiveDate, ParseError};
 use des::Des;
 use regex::Regex;
 use std::collections::HashMap;
@@ -92,6 +92,10 @@ fn validate_date(date: &str) -> Result<bool, Box<dyn Error>> {
     let date_regex: Regex = Regex::new(r"^\d{4}-\d{2}-\d{2}$").unwrap();
     if !date_regex.is_match(date) {
         Err("Invalid date format, must be YYYY-MM-DD")?;
+    }
+    let naive_date: Result<NaiveDate, ParseError> = NaiveDate::parse_from_str(date, "%Y-%m-%d");
+    if naive_date.is_err() {
+        Err(format!("Unable to parse date '{}'. Year, month or day value out of range.", date))?;
     }
     Ok(true)
 }
