@@ -1,6 +1,6 @@
 [package]
 name = "rspotd"
-version = "0.1.9"
+version = "0.2.0"
 edition = "2021"
 description = "Generate ARRIS/CommScope Password of the Day for modems"
 homepage = "https://github.com/SnailShea/rspotd"
