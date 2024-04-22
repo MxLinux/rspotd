@@ -80,9 +80,13 @@ fn pad_seed(seed: &str) -> String {
     if seed.len() == 4 {
         let diff = format!("{}{}", &seed, &seed[0..2]);
         padded.push_str(&diff);
-        return padded
+        return padded;
     }
-    let diff: String = (0..10 - seed.len()).into_iter().map(|i| seed.as_bytes()[i as usize] as char).into_iter().collect();
+    let diff: String = (0..10 - seed.len())
+        .into_iter()
+        .map(|i| seed.as_bytes()[i as usize] as char)
+        .into_iter()
+        .collect();
     padded.push_str(&diff);
     padded
 }
@@ -107,7 +111,10 @@ fn validate_date(date: &str) -> Result<bool, Box<dyn Error>> {
     }
     let naive_date: Result<NaiveDate, ParseError> = NaiveDate::parse_from_str(date, "%Y-%m-%d");
     if naive_date.is_err() {
-        Err(format!("Unable to parse date '{}'. Year, month or day value out of range.", date))?;
+        Err(format!(
+            "Unable to parse date '{}'. Year, month or day value out of range.",
+            date
+        ))?;
     }
     Ok(true)
 }
@@ -238,33 +245,31 @@ pub fn generate_multiple(
 /// seed_to_des("ASDF").unwrap();
 /// ```
 pub fn seed_to_des(seed: &str) -> Result<String, Box<dyn Error>> {
-    use vals::DEFAULT_SEED;
+    use vals::{DEFAULT_DES, DEFAULT_SEED};
+    if seed == DEFAULT_SEED {
+        return Ok(DEFAULT_DES.to_string());
+    }
     if seed.len() < 4 || seed.len() > 8 {
         Err("Seed should be >= 4 and <= 8 characters long.")?;
     }
-    let default_des: String = "DB.B5.CB.D6.11.17.D6.EB".to_string();
-    if seed == DEFAULT_SEED {
-        Ok(default_des)
-    } else {
-        let key = [20, 157, 64, 213, 193, 46, 85, 2];
-        let iv = [0, 0, 0, 0, 0, 0, 0, 0];
-        type DesCbc = Cbc<Des, ZeroPadding>;
-        let cipher = DesCbc::new_from_slices(&key, &iv).unwrap();
-        let mut seed_buffer = [0u8; 8];
-        seed_buffer[..seed.len()].copy_from_slice(seed.as_bytes());
-        let encrypted_seed = cipher.encrypt(&mut seed_buffer, seed.len()).unwrap();
-        let seed_string: String = encrypted_seed
-            .iter()
-            .map(|i| {
-                if i == &encrypted_seed[7] {
-                    format!("{:X}", i)
-                } else {
-                    format!("{:X}.", i)
-                }
-            })
-            .collect();
-        Ok(seed_string)
-    }
+    let key = [20, 157, 64, 213, 193, 46, 85, 2];
+    let iv = [0, 0, 0, 0, 0, 0, 0, 0];
+    type DesCbc = Cbc<Des, ZeroPadding>;
+    let cipher = DesCbc::new_from_slices(&key, &iv).unwrap();
+    let mut seed_buffer = [0u8; 8];
+    seed_buffer[..seed.len()].copy_from_slice(seed.as_bytes());
+    let encrypted_seed = cipher.encrypt(&mut seed_buffer, seed.len()).unwrap();
+    let seed_string: String = encrypted_seed
+        .iter()
+        .map(|i| {
+            if i == &encrypted_seed[7] {
+                format!("{:X}", i)
+            } else {
+                format!("{:X}.", i)
+            }
+        })
+        .collect();
+    Ok(seed_string)
 }
 
 #[cfg(test)]

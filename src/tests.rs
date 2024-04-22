@@ -1,4 +1,7 @@
-use crate::{generate, generate_multiple, seed_to_des, vals::DEFAULT_SEED};
+use crate::{
+    generate, generate_multiple, seed_to_des,
+    vals::{DEFAULT_DES, DEFAULT_SEED},
+};
 
 #[test]
 fn default_seed() {
@@ -69,6 +72,11 @@ fn invalid_date() {
 #[test]
 fn des_seed_short() {
     assert!(seed_to_des("ABC").is_err());
+}
+
+#[test]
+fn default_seed_des() {
+    assert_eq!(seed_to_des(DEFAULT_SEED).unwrap(), DEFAULT_DES);
 }
 
 #[test]

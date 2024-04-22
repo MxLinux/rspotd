@@ -1,5 +1,6 @@
 // Default seed used by ARRIS/CommScope
 pub const DEFAULT_SEED: &str = "MPSJKMDHAI";
+pub const DEFAULT_DES: &str = "DB.B5.CB.D6.11.17.D6.EB";
 pub const ALPHANUM: [char; 36] = [
     '0', '1', '2', '3', '4', '5',
     '6', '7', '8', '9', 'A', 'B',
