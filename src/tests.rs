@@ -27,15 +27,13 @@ fn different_date() {
 
 #[test]
 fn small_multiple() {
-    let mut comparison_map: BTreeMap<usize, Vec<String>> = BTreeMap::new();
+    let mut comparison_map: BTreeMap<String, String> = BTreeMap::new();
     let date_begin: String = "2021-12-25".to_string();
     let date_end: String = "2021-12-26".to_string();
     let potd_begin: String = "ZCARK8TPK5".to_string();
     let potd_end: String = "ZOU3MLLZO4".to_string();
-    let vec_begin: Vec<String> = vec![date_begin, potd_begin];
-    let vec_end: Vec<String> = vec![date_end, potd_end];
-    comparison_map.insert(0, vec_begin);
-    comparison_map.insert(1, vec_end);
+    comparison_map.insert(date_begin, potd_begin);
+    comparison_map.insert(date_end, potd_end);
     assert_eq!(
         generate_multiple("2021-12-25", "2021-12-26", DEFAULT_SEED).unwrap(),
         comparison_map

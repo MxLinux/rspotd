@@ -187,7 +187,7 @@ pub fn generate_multiple(
     date_begin: &str,
     date_end: &str,
     seed: &str,
-) -> Result<BTreeMap<usize, Vec<String>>, Box<dyn Error>> {
+) -> Result<BTreeMap<String, String>, Box<dyn Error>> {
     let valid_begin = validate_date(date_begin);
     let valid_end = validate_date(date_end);
     if valid_begin.is_err() {
@@ -209,13 +209,12 @@ pub fn generate_multiple(
         Err(err_str.unwrap_err().to_string())?;
     }
     let mut potd_map = BTreeMap::new();
-    for (i, date) in date_range.enumerate() {
+    for date in date_range {
         let format = StrftimeItems::new("%Y-%m-%d");
         let date_string = date.format_with_items(format).to_string();
-        let seed = valid_seed.as_ref().unwrap();
-        let entry: Vec<String> = vec![date_string.to_string(), derive_from_input(&date_string, seed)];
+        let potd = derive_from_input(&date_string, valid_seed.as_ref().unwrap());
         potd_map.insert(
-            i, entry
+            date_string, potd
         );
     }
     return Ok(potd_map);
