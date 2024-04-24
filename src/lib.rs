@@ -4,7 +4,7 @@ use chrono::format::strftime::StrftimeItems;
 use chrono::{Datelike, Duration, NaiveDate, ParseError};
 use des::Des;
 use regex::Regex;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::error::Error;
 use std::mem::replace;
 
