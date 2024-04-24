@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use crate::{
     generate, generate_multiple, seed_to_des,
     vals::{DEFAULT_DES, DEFAULT_SEED},
@@ -25,14 +27,15 @@ fn different_date() {
 
 #[test]
 fn small_multiple() {
-    use std::collections::HashMap;
-    let mut comparison_map: HashMap<String, String> = HashMap::new();
+    let mut comparison_map: BTreeMap<usize, Vec<String>> = BTreeMap::new();
     let date_begin: String = "2021-12-25".to_string();
     let date_end: String = "2021-12-26".to_string();
-    let seed_begin: String = "ZCARK8TPK5".to_string();
-    let seed_end: String = "ZOU3MLLZO4".to_string();
-    comparison_map.insert(date_begin, seed_begin);
-    comparison_map.insert(date_end, seed_end);
+    let potd_begin: String = "ZCARK8TPK5".to_string();
+    let potd_end: String = "ZOU3MLLZO4".to_string();
+    let vec_begin: Vec<String> = vec![date_begin, potd_begin];
+    let vec_end: Vec<String> = vec![date_end, potd_end];
+    comparison_map.insert(0, vec_begin);
+    comparison_map.insert(1, vec_end);
     assert_eq!(
         generate_multiple("2021-12-25", "2021-12-26", DEFAULT_SEED).unwrap(),
         comparison_map
