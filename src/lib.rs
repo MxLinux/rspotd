@@ -193,7 +193,7 @@ pub fn generate_multiple(
     seed: &str,
 ) -> Result<BTreeMap<String, String>, Box<dyn Error>> {
     use vals::DATE_FORMAT;
-    
+
     let valid_begin = validate_date(date_begin);
     let valid_end = validate_date(date_end);
     if valid_begin.is_err() {
@@ -219,9 +219,7 @@ pub fn generate_multiple(
         let format = StrftimeItems::new(DATE_FORMAT);
         let date_string = date.format_with_items(format).to_string();
         let potd = derive_from_input(&date_string, valid_seed.as_ref().unwrap());
-        potd_map.insert(
-            date_string, potd
-        );
+        potd_map.insert(date_string, potd);
     }
     return Ok(potd_map);
 }
