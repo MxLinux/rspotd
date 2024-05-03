@@ -23,8 +23,8 @@ impl Iterator for DateRange {
 }
 
 fn derive_from_input(date: &str, padded_seed: &str) -> String {
-    use vals::{ALPHANUM, TABLE1, TABLE2};
-    let naive_date = NaiveDate::parse_from_str(date, "%Y-%m-%d").unwrap();
+    use vals::{ALPHANUM, DATE_FORMAT, TABLE1, TABLE2};
+    let naive_date = NaiveDate::parse_from_str(date, DATE_FORMAT).unwrap();
     // Split date in YYYY-MM-DD format by hypen into a Vector of strings
     let date_components: Vec<i32> = date
         .split('-')
@@ -105,11 +105,13 @@ fn validate_seed(seed: &str) -> Result<String, Box<dyn Error>> {
 }
 
 fn validate_date(date: &str) -> Result<bool, Box<dyn Error>> {
+    use vals::DATE_FORMAT;
+
     let date_regex: Regex = Regex::new(r"^\d{4}-\d{2}-\d{2}$").unwrap();
     if !date_regex.is_match(date) {
         Err("Invalid date format, must be YYYY-MM-DD")?;
     }
-    let naive_date: Result<NaiveDate, ParseError> = NaiveDate::parse_from_str(date, "%Y-%m-%d");
+    let naive_date: Result<NaiveDate, ParseError> = NaiveDate::parse_from_str(date, DATE_FORMAT);
     if naive_date.is_err() {
         Err(format!(
             "Unable to parse date '{}'. Year, month or day value out of range.",
@@ -120,8 +122,10 @@ fn validate_date(date: &str) -> Result<bool, Box<dyn Error>> {
 }
 
 fn validate_range(date_begin: &str, date_end: &str) -> Result<bool, Box<dyn Error>> {
-    let naive_begin = NaiveDate::parse_from_str(date_begin, "%Y-%m-%d").unwrap();
-    let naive_end = NaiveDate::parse_from_str(date_end, "%Y-%m-%d").unwrap();
+    use vals::DATE_FORMAT;
+
+    let naive_begin = NaiveDate::parse_from_str(date_begin, DATE_FORMAT).unwrap();
+    let naive_end = NaiveDate::parse_from_str(date_end, DATE_FORMAT).unwrap();
     if naive_end.signed_duration_since(naive_begin) <= Duration::zero() {
         Err("Invalid date range. Beginning date must occur before end date, and the values cannot be the same.")?;
     }
@@ -188,6 +192,8 @@ pub fn generate_multiple(
     date_end: &str,
     seed: &str,
 ) -> Result<BTreeMap<String, String>, Box<dyn Error>> {
+    use vals::DATE_FORMAT;
+    
     let valid_begin = validate_date(date_begin);
     let valid_end = validate_date(date_end);
     if valid_begin.is_err() {
@@ -200,8 +206,8 @@ pub fn generate_multiple(
     if valid_range.is_err() {
         Err(valid_range.unwrap_err())?;
     }
-    let naive_begin = NaiveDate::parse_from_str(date_begin, "%Y-%m-%d").unwrap();
-    let naive_end = NaiveDate::parse_from_str(date_end, "%Y-%m-%d").unwrap();
+    let naive_begin = NaiveDate::parse_from_str(date_begin, DATE_FORMAT).unwrap();
+    let naive_end = NaiveDate::parse_from_str(date_end, DATE_FORMAT).unwrap();
     let date_range = DateRange(naive_begin, naive_end);
     let valid_seed = validate_seed(seed);
     if valid_seed.is_err() {
@@ -210,7 +216,7 @@ pub fn generate_multiple(
     }
     let mut potd_map = BTreeMap::new();
     for date in date_range {
-        let format = StrftimeItems::new("%Y-%m-%d");
+        let format = StrftimeItems::new(DATE_FORMAT);
         let date_string = date.format_with_items(format).to_string();
         let potd = derive_from_input(&date_string, valid_seed.as_ref().unwrap());
         potd_map.insert(
