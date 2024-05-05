@@ -3,7 +3,7 @@ name = "rspotd"
 version = "0.5.0"
 edition = "2021"
 description = "Generate ARRIS/CommScope Password of the Day for modems"
-homepage = "https://github.com/SnailShea/rspotd"
+repository = "https://github.com/SnailShea/rspotd"
 license = "MIT OR Apache-2.0"
 keywords = ["arris", "commscope", "modem", "docsis", "potd"]
 
