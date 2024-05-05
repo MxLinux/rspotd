@@ -51,6 +51,12 @@ fn small_multiple_invalid_range() {
 }
 
 #[test]
+fn small_range_invalid_dates() {
+    assert!(generate_multiple("2022-14-12", "2022-12-12", DEFAULT_SEED).is_err());
+    assert!(generate_multiple("2022-04-12", "2022-04-32", DEFAULT_SEED).is_err());
+}
+
+#[test]
 fn multiple_exceed_year() {
     assert!(generate_multiple("2021-12-25", "2022-12-26", DEFAULT_SEED).is_err());
 }

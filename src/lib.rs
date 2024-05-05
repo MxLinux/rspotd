@@ -1,17 +1,18 @@
 use block_modes::{BlockMode, Cbc};
 use block_padding::ZeroPadding;
-use chrono::format::strftime::StrftimeItems;
-use chrono::{Datelike, Duration, NaiveDate, ParseError};
 use des::Des;
 use regex::Regex;
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::mem::replace;
+use time::macros::format_description;
+use time::Date;
+use time::Duration;
 
 // Create a date range using a start and end date
-struct DateRange(NaiveDate, NaiveDate);
+struct DateRange(Date, Date);
 impl Iterator for DateRange {
-    type Item = NaiveDate;
+    type Item = Date;
     fn next(&mut self) -> Option<Self::Item> {
         if self.0 <= self.1 {
             let next = self.0 + Duration::days(1);
@@ -23,8 +24,8 @@ impl Iterator for DateRange {
 }
 
 fn derive_from_input(date: &str, padded_seed: &str) -> String {
-    use vals::{ALPHANUM, DATE_FORMAT, TABLE1, TABLE2};
-    let naive_date = NaiveDate::parse_from_str(date, DATE_FORMAT).unwrap();
+    use vals::{ALPHANUM, TABLE1, TABLE2};
+    let fmt_date = validate_date(date).unwrap();
     // Split date in YYYY-MM-DD format by hypen into a Vector of strings
     let date_components: Vec<i32> = date
         .split('-')
@@ -35,7 +36,7 @@ fn derive_from_input(date: &str, padded_seed: &str) -> String {
     let year_trimmed = year.to_string()[2..].parse::<i32>().unwrap();
     let month = date_components[1];
     let day = date_components[2];
-    let day_of_week = naive_date.weekday().num_days_from_monday() as usize;
+    let day_of_week = fmt_date.weekday().number_days_from_monday() as usize;
     let a: Vec<i32> = (0..8)
         .map(|i| match i {
             0..=4 => TABLE1[day_of_week][i],
@@ -104,32 +105,38 @@ fn validate_seed(seed: &str) -> Result<String, Box<dyn Error>> {
     return Ok(padded_seed);
 }
 
-fn validate_date(date: &str) -> Result<bool, Box<dyn Error>> {
-    use vals::DATE_FORMAT;
-
+fn validate_date(date: &str) -> Result<Date, Box<dyn Error>> {
+    let fmt = format_description!("[year]-[month]-[day]");
     let date_regex: Regex = Regex::new(r"^\d{4}-\d{2}-\d{2}$").unwrap();
     if !date_regex.is_match(date) {
         Err("Invalid date format, must be YYYY-MM-DD")?;
     }
-    let naive_date: Result<NaiveDate, ParseError> = NaiveDate::parse_from_str(date, DATE_FORMAT);
-    if naive_date.is_err() {
-        Err(format!(
+    let parsed_date = Date::parse(date, fmt);
+    if parsed_date.is_ok() {
+        return Ok(parsed_date.unwrap());
+    } else {
+        let err = format!(
             "Unable to parse date '{}'. Year, month or day value out of range.",
             date
-        ))?;
+        );
+        return Err(err.into());
     }
-    Ok(true)
 }
 
 fn validate_range(date_begin: &str, date_end: &str) -> Result<bool, Box<dyn Error>> {
-    use vals::DATE_FORMAT;
-
-    let naive_begin = NaiveDate::parse_from_str(date_begin, DATE_FORMAT).unwrap();
-    let naive_end = NaiveDate::parse_from_str(date_end, DATE_FORMAT).unwrap();
-    if naive_end.signed_duration_since(naive_begin) <= Duration::zero() {
+    let maybe_begin = validate_date(date_begin);
+    let maybe_end = validate_date(date_end);
+    if maybe_begin.is_err() {
+        return Err(maybe_begin.unwrap_err());
+    } else if maybe_end.is_err() {
+        return Err(maybe_end.unwrap_err());
+    }
+    let begin = maybe_begin.unwrap();
+    let end = maybe_end.unwrap();
+    if end - begin <= time::Duration::days(0) {
         Err("Invalid date range. Beginning date must occur before end date, and the values cannot be the same.")?;
     }
-    if naive_end - naive_begin > Duration::days(365) {
+    if end - begin > Duration::days(365) {
         Err("Invalid date range. Official tooling does not allow a date range exceeding 1 year.")?;
     }
     return Ok(true);
@@ -192,32 +199,26 @@ pub fn generate_multiple(
     date_end: &str,
     seed: &str,
 ) -> Result<BTreeMap<String, String>, Box<dyn Error>> {
-    use vals::DATE_FORMAT;
-
-    let valid_begin = validate_date(date_begin);
-    let valid_end = validate_date(date_end);
-    if valid_begin.is_err() {
-        Err(valid_begin.unwrap_err())?;
+    let begin = validate_date(date_begin);
+    let end = validate_date(date_end);
+    if begin.is_err() {
+        return Err(begin.unwrap_err());
     }
-    if valid_end.is_err() {
-        Err(valid_end.unwrap_err())?;
+    if end.is_err() {
+        return Err(end.unwrap_err());
     }
     let valid_range = validate_range(date_begin, date_end);
     if valid_range.is_err() {
-        Err(valid_range.unwrap_err())?;
+        return Err(valid_range.unwrap_err());
     }
-    let naive_begin = NaiveDate::parse_from_str(date_begin, DATE_FORMAT).unwrap();
-    let naive_end = NaiveDate::parse_from_str(date_end, DATE_FORMAT).unwrap();
-    let date_range = DateRange(naive_begin, naive_end);
+    let date_range = DateRange(begin.unwrap(), end.unwrap());
     let valid_seed = validate_seed(seed);
     if valid_seed.is_err() {
-        let err_str = &valid_seed.as_ref();
-        Err(err_str.unwrap_err().to_string())?;
+        return Err(valid_seed.unwrap_err());
     }
     let mut potd_map = BTreeMap::new();
     for date in date_range {
-        let format = StrftimeItems::new(DATE_FORMAT);
-        let date_string = date.format_with_items(format).to_string();
+        let date_string = date.to_string();
         let potd = derive_from_input(&date_string, valid_seed.as_ref().unwrap());
         potd_map.insert(date_string, potd);
     }

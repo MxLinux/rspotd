@@ -1,5 +1,3 @@
-// Default seed used by ARRIS/CommScope
-pub const DATE_FORMAT: &str = "%Y-%m-%d";
 pub const DEFAULT_SEED: &str = "MPSJKMDHAI";
 pub const DEFAULT_DES: &str = "DB.B5.CB.D6.11.17.D6.EB";
 pub const ALPHANUM: [char; 36] = [
