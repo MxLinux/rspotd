@@ -1,0 +1,7 @@
+- Figure out whether current efforts are the correct approach, and otherwise what to do
+- If current efforts are not in vain, how to unwrap MaybePotD?
+- Give PotD values for pre- and post-padded seed
+- Need to implement equivalent structs for user-supplied data (seed, date/range)
+    - Current implementation of MaybePotD does not account for range
+- Implement validators as mod
+- Implement errors as enums (https://stackoverflow.com/questions/71812362/rust-error-handling-capturing-multiple-errors)
