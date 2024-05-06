@@ -31,7 +31,7 @@ struct Seed(String);
 
 struct MaybePotD(Result<PotD, Box<dyn Error>>);
 impl MaybePotD {
-    fn new(date: &str, seed: &str) -> MaybePotD {
+    fn new(self, date: &str, seed: &str) -> MaybePotD {
         let user_seed = validate_seed(seed);
         let user_date = validate_date(date);
         let potd = generate(date, seed);
