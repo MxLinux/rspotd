@@ -23,6 +23,62 @@ impl Iterator for DateRange {
     }
 }
 
+struct MaybeDESVal(String);
+struct DESVal(String);
+struct MaybeSeed(Result<String, Box<dyn Error>>);
+struct MaybeDate(Result<Date, Box<dyn Error>>);
+struct Seed(String);
+
+struct MaybePotD(Result<PotD, Box<dyn Error>>);
+impl MaybePotD {
+    fn new(date: &str, seed: &str) -> MaybePotD {
+        let user_seed = validate_seed(seed);
+        let user_date = validate_date(date);
+        let potd = generate(date, seed);
+        if user_seed.is_ok() && user_date.is_ok() && potd.is_ok() {
+            return MaybePotD {
+                0: Ok(PotD {
+                    0: user_seed.unwrap(),
+                    1: user_date.unwrap(),
+                    2: potd.unwrap(),
+                })
+            };
+        } else if user_seed.is_err() {
+            return MaybePotD {
+                0: Err(user_seed.unwrap_err())
+            };
+        } else if user_date.is_err() {
+            return MaybePotD {
+                0: Err(user_date.unwrap_err())
+            };
+        } else if potd.is_err() {
+            return  MaybePotD {
+                0: Err(potd.unwrap_err())
+            };
+        } else {
+            return MaybePotD {
+                0: Err("An unexpected error has occured".into())
+            };
+        }
+    }
+}
+
+impl TryInto<PotD> for MaybePotD {
+    type Error = Box<dyn Error>;
+    fn try_into(self) -> Result<PotD, Self::Error> {
+        let potd = self.0;
+        if potd.is_err() {
+            return Err(potd.unwrap_err());
+        } else {
+            return potd;
+        }
+    }
+}
+
+#[derive(Debug)]
+struct PotD(String, Date, String);
+
+
 fn derive_from_input(date: &str, padded_seed: &str) -> String {
     use vals::{ALPHANUM, TABLE1, TABLE2};
     let fmt_date = validate_date(date).unwrap();

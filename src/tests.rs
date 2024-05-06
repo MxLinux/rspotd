@@ -1,9 +1,21 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, error::Error};
 
 use crate::{
     generate, generate_multiple, seed_to_des,
     vals::{DEFAULT_DES, DEFAULT_SEED},
+    MaybePotD, PotD,
 };
+
+#[test]
+fn struct_test() {
+    let maybe = MaybePotD::new("2021-12-25", "asdf");
+    let potd: Result<PotD, Box<dyn Error>> = maybe.try_into();
+    if potd.is_err() {
+        println!("{}", potd.unwrap_err());
+    } else {
+        println!("{:?}", potd.unwrap());
+    }
+}
 
 #[test]
 fn default_seed() {
