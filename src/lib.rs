@@ -2,6 +2,8 @@ use block_modes::{BlockMode, Cbc};
 use block_padding::ZeroPadding;
 use des::Des;
 use regex::Regex;
+use serde::Deserialize;
+use serde::Serialize;
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::mem::replace;
@@ -23,61 +25,31 @@ impl Iterator for DateRange {
     }
 }
 
-struct MaybeDESVal(String);
-struct DESVal(String);
-struct MaybeSeed(Result<String, Box<dyn Error>>);
-struct MaybeDate(Result<Date, Box<dyn Error>>);
+struct EncodedDES(String);
 struct Seed(String);
 
-struct MaybePotD(Result<PotD, Box<dyn Error>>);
-impl MaybePotD {
-    fn new(date: &str, seed: &str) -> MaybePotD {
-        let user_seed = validate_seed(seed);
-        let user_date = validate_date(date);
-        let potd = generate(date, seed);
-        if user_seed.is_ok() && user_date.is_ok() && potd.is_ok() {
-            return MaybePotD {
-                0: Ok(PotD {
-                    0: user_seed.unwrap(),
-                    1: user_date.unwrap(),
-                    2: potd.unwrap(),
-                })
-            };
-        } else if user_seed.is_err() {
-            return MaybePotD {
-                0: Err(user_seed.unwrap_err())
-            };
-        } else if user_date.is_err() {
-            return MaybePotD {
-                0: Err(user_date.unwrap_err())
-            };
-        } else if potd.is_err() {
-            return  MaybePotD {
-                0: Err(potd.unwrap_err())
-            };
-        } else {
-            return MaybePotD {
-                0: Err("An unexpected error has occured".into())
-            };
-        }
-    }
+#[derive(Debug, Deserialize, Serialize)]
+struct PotD {
+    valid_date: String,
+    given_seed: String,
+    padded_seed: String,
+    potd: String,
 }
 
-impl TryInto<PotD> for MaybePotD {
-    type Error = Box<dyn Error>;
-    fn try_into(self) -> Result<PotD, Self::Error> {
-        let potd = self.0;
-        if potd.is_err() {
-            return Err(potd.unwrap_err());
-        } else {
-            return potd;
-        }
+impl PotD {
+    fn new(date: &str, seed: &str) -> Result<PotD, Box<dyn Error>> {
+        let given_seed = seed.to_string();
+        let padded_seed = validate_seed(seed)?;
+        let valid_date = validate_date(date)?.to_string();
+        let potd = generate(date, seed)?;
+        Ok(PotD {
+            valid_date,
+            given_seed,
+            padded_seed,
+            potd,
+        })
     }
 }
-
-#[derive(Debug)]
-struct PotD(String, Date, String);
-
 
 fn derive_from_input(date: &str, padded_seed: &str) -> String {
     use vals::{ALPHANUM, TABLE1, TABLE2};
@@ -152,13 +124,10 @@ fn validate_seed(seed: &str) -> Result<String, Box<dyn Error>> {
     use vals::DEFAULT_SEED;
     if seed == DEFAULT_SEED {
         return Ok(seed.to_string());
-    }
-    // seed must be 4-8 characters
-    if seed.len() < 4 || seed.len() > 8 {
+    } else if seed.len() < 4 || seed.len() > 8 {
         Err("Seed should be >= 4 and <= 8 characters long.")?;
     }
-    let padded_seed: String = pad_seed(seed);
-    return Ok(padded_seed);
+    return Ok(pad_seed(seed));
 }
 
 fn validate_date(date: &str) -> Result<Date, Box<dyn Error>> {
@@ -167,28 +136,14 @@ fn validate_date(date: &str) -> Result<Date, Box<dyn Error>> {
     if !date_regex.is_match(date) {
         Err("Invalid date format, must be YYYY-MM-DD")?;
     }
-    let parsed_date = Date::parse(date, fmt);
-    if parsed_date.is_ok() {
-        return Ok(parsed_date.unwrap());
-    } else {
-        let err = format!(
-            "Unable to parse date '{}'. Year, month or day value out of range.",
-            date
-        );
-        return Err(err.into());
-    }
+    let parsed_date = Date::parse(date, fmt)?;
+    return Ok(parsed_date);
 }
 
 fn validate_range(date_begin: &str, date_end: &str) -> Result<bool, Box<dyn Error>> {
-    let maybe_begin = validate_date(date_begin);
-    let maybe_end = validate_date(date_end);
-    if maybe_begin.is_err() {
-        return Err(maybe_begin.unwrap_err());
-    } else if maybe_end.is_err() {
-        return Err(maybe_end.unwrap_err());
-    }
-    let begin = maybe_begin.unwrap();
-    let end = maybe_end.unwrap();
+    // TODO: return Ok(DateRange) instead and move time validation to implementation
+    let begin = validate_date(date_begin)?;
+    let end = validate_date(date_end)?;
     if end - begin <= time::Duration::days(0) {
         Err("Invalid date range. Beginning date must occur before end date, and the values cannot be the same.")?;
     }
@@ -218,17 +173,11 @@ fn validate_range(date_begin: &str, date_end: &str) -> Result<bool, Box<dyn Erro
 /// generate("2021-12-25", "ABCDEFGH").unwrap();
 /// ```
 pub fn generate(date: &str, seed: &str) -> Result<String, Box<dyn Error>> {
-    let valid_date = validate_date(date);
-    if valid_date.is_err() {
-        Err(valid_date.unwrap_err())?;
-    }
-    let valid_seed = validate_seed(seed);
-    if valid_seed.is_err() {
-        let err_str = &valid_seed.as_ref();
-        Err(err_str.unwrap_err().to_string())?;
-    }
-
-    return Ok(derive_from_input(date, &valid_seed.unwrap()));
+    // TODO: derive_from_input should accept a Date?
+    // valid_date is also called in derive_from_input...
+    validate_date(date)?;
+    let valid_seed = validate_seed(seed)?;
+    return Ok(derive_from_input(date, &valid_seed));
 }
 
 /// Generate a series of ARRIS/Commscope modem passwords given a start and end date and a seed
@@ -255,27 +204,15 @@ pub fn generate_multiple(
     date_end: &str,
     seed: &str,
 ) -> Result<BTreeMap<String, String>, Box<dyn Error>> {
-    let begin = validate_date(date_begin);
-    let end = validate_date(date_end);
-    if begin.is_err() {
-        return Err(begin.unwrap_err());
-    }
-    if end.is_err() {
-        return Err(end.unwrap_err());
-    }
-    let valid_range = validate_range(date_begin, date_end);
-    if valid_range.is_err() {
-        return Err(valid_range.unwrap_err());
-    }
-    let date_range = DateRange(begin.unwrap(), end.unwrap());
-    let valid_seed = validate_seed(seed);
-    if valid_seed.is_err() {
-        return Err(valid_seed.unwrap_err());
-    }
+    let begin = validate_date(date_begin)?;
+    let end = validate_date(date_end)?;
+    validate_range(date_begin, date_end)?;
+    let date_range = DateRange(begin, end);
+    let valid_seed = validate_seed(seed)?;
     let mut potd_map = BTreeMap::new();
     for date in date_range {
         let date_string = date.to_string();
-        let potd = derive_from_input(&date_string, valid_seed.as_ref().unwrap());
+        let potd = derive_from_input(&date_string, valid_seed.as_str());
         potd_map.insert(date_string, potd);
     }
     return Ok(potd_map);

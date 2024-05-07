@@ -1,15 +1,14 @@
-use std::{collections::BTreeMap, error::Error};
+use std::collections::BTreeMap;
 
 use crate::{
     generate, generate_multiple, seed_to_des,
     vals::{DEFAULT_DES, DEFAULT_SEED},
-    MaybePotD, PotD,
+    PotD,
 };
 
 #[test]
 fn struct_test() {
-    let maybe = MaybePotD::new("2021-12-25", "asdf");
-    let potd: Result<PotD, Box<dyn Error>> = maybe.try_into();
+    let potd = PotD::new("2021-12-25", "aaa\\");
     if potd.is_err() {
         println!("{}", potd.unwrap_err());
     } else {
@@ -19,6 +18,7 @@ fn struct_test() {
 
 #[test]
 fn default_seed() {
+    assert_eq!(PotD::new("2021-12-25", DEFAULT_SEED).unwrap().potd, "ZCARK8TPK5");
     assert_eq!(generate("2021-12-25", DEFAULT_SEED).unwrap(), "ZCARK8TPK5");
 }
 

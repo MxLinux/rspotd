@@ -5,3 +5,4 @@
     - Current implementation of MaybePotD does not account for range
 - Implement validators as mod
 - Implement errors as enums (https://stackoverflow.com/questions/71812362/rust-error-handling-capturing-multiple-errors)
+- Possible issue with \ in seeds
